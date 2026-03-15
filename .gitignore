@@ -1,0 +1,9 @@
+# スクレイピングで作成されたデータファイル
+news_list.txt
+
+# Pythonが自動生成するキャッシュ（動作を速くするためのフォルダ）
+__pycache__/
+
+# OSが勝手に作る管理ファイル
+.DS_Store
+Thumbs.db
