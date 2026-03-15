@@ -1,81 +1,40 @@
-import requests
-from bs4 import BeautifulSoup
-import time
-import urllib3
 import yfinance as yf
-import datetime
+from plyer import notification # 通知用ライブラリ
 
-# --- 初期設定 ---
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-headers = {"User-Agent": "Mozilla/5.0"}
-
-# --- 【機能1】ニュースを取得する関数 ---
-def get_news():
-    url = "https://news.yahoo.co.jp/topics/top-picks"
-    try:
-        response = requests.get(url, headers=headers, verify=False)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
+def check_stock_alert(ticker, name, target_price, direction="above"):
+    """
+    株価をチェックして、目標値を超えたら通知を出す関数
+    direction: "above" (以上) または "below" (以下)
+    """
+    stock = yf.Ticker(ticker)
+    data = stock.history(period="1d")
+    
+    if data.empty:
+        return
         
-        # aタグの中から見出しっぽいものを探す（前回の修正版）
-        articles = soup.find_all("a")
-        news_titles = []
-        for article in articles:
-            title = article.get_text(strip=True)
-            if len(title) > 10 and "一覧" not in title:
-                news_titles.append(title)
-                if len(news_titles) >= 10: break
-        return news_titles
-    except Exception as e:
-        return [f"ニュース取得エラー: {e}"]
-
-# --- 【機能2】株価を取得する関数 ---
-def get_stock_price(ticker_symbol):
-    try:
-        stock = yf.Ticker(ticker_symbol)
-        # 最新1日分のデータを取得
-        data = stock.history(period="1d")
-        if not data.empty:
-            # 最新の終値を小数点2桁で返す
-            return f"{data['Close'].iloc[-1]:.2f}"
-        return "データなし"
-    except Exception as e:
-        return f"エラー: {e}"
-
-# --- 【メイン処理】実行 ---
-if __name__ == "__main__":
-    now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
-    print(f"=== 実行時刻: {now_str} ===")
-
-    # 1. ニュース取得
-    print("\n--- 今日のニュース ---")
-    titles = get_news()
-    for i, t in enumerate(titles, 1):
-        print(f"{i}: {t}")
-
-    # 2. 株価取得
-    print("\n--- 最新株価 ---")
-    # 好きな銘柄を追加・変更できます（.Tは東京証券取引所）
-    target_stocks = {
-        "NVDA": "エヌビディア",
-        "7203.T": "トヨタ自動車",
-        "9984.T": "ソフトバンクG",
-        "AAPL": "アップル"
-    }
+    current_price = data['Close'].iloc[-1]
     
-    stock_results = []
-    for ticker, name in target_stocks.items():
-        price = get_stock_price(ticker)
-        line = f"{name} ({ticker}): {price}"
-        print(line)
-        stock_results.append(line)
+    # 条件判定
+    is_alert = False
+    if direction == "above" and current_price >= target_price:
+        is_alert = True
+        msg = f"{target_price}円を超えました！ (現在: {current_price:.2f}円)"
+    elif direction == "below" and current_price <= target_price:
+        is_alert = True
+        msg = f"{target_price}円を下回りました！ (現在: {current_price:.2f}円)"
 
-    # 3. ファイル保存 (report.txt)
-    with open("report.txt", "w", encoding="utf-8") as f:
-        f.write(f"取得日時: {now_str}\n\n")
-        f.write("【ニュース】\n")
-        f.write("\n".join(titles) + "\n\n")
-        f.write("【株価】\n")
-        f.write("\n".join(stock_results))
-    
-    print("\n[完了] report.txt に結果を保存しました！")
+    # 条件を満たしていたら、デスクトップ通知を飛ばす
+    if is_alert:
+        notification.notify(
+            title=f"【株価アラート】{name}",
+            message=msg,
+            app_name="Stock Monitor",
+            timeout=10 # 通知が表示される時間（秒）
+        )
+        print(f"!!! ALERT !!! {name}: {msg}")
+
+# 実行例：トヨタが2500円以下になったら通知
+check_stock_alert("7203.T", "トヨタ自動車", 2500, direction="below")
+
+# 実行例：エヌビディアが130ドル以上になったら通知
+check_stock_alert("NVDA", "エヌビディア", 130, direction="above")
