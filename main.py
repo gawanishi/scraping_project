@@ -2,41 +2,80 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import urllib3
+import yfinance as yf
+import datetime
 
-# SSL警告を非表示にする
+# --- 初期設定 ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+headers = {"User-Agent": "Mozilla/5.0"}
 
-url = "https://news.yahoo.co.jp/topics/top-picks"
-headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+# --- 【機能1】ニュースを取得する関数 ---
+def get_news():
+    url = "https://news.yahoo.co.jp/topics/top-picks"
+    try:
+        response = requests.get(url, headers=headers, verify=False)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        
+        # aタグの中から見出しっぽいものを探す（前回の修正版）
+        articles = soup.find_all("a")
+        news_titles = []
+        for article in articles:
+            title = article.get_text(strip=True)
+            if len(title) > 10 and "一覧" not in title:
+                news_titles.append(title)
+                if len(news_titles) >= 10: break
+        return news_titles
+    except Exception as e:
+        return [f"ニュース取得エラー: {e}"]
 
-try:
-    response = requests.get(url, headers=headers, verify=False)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, "html.parser")
+# --- 【機能2】株価を取得する関数 ---
+def get_stock_price(ticker_symbol):
+    try:
+        stock = yf.Ticker(ticker_symbol)
+        # 最新1日分のデータを取得
+        data = stock.history(period="1d")
+        if not data.empty:
+            # 最新の終値を小数点2桁で返す
+            return f"{data['Close'].iloc[-1]:.2f}"
+        return "データなし"
+    except Exception as e:
+        return f"エラー: {e}"
+
+# --- 【メイン処理】実行 ---
+if __name__ == "__main__":
+    now_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+    print(f"=== 実行時刻: {now_str} ===")
+
+    # 1. ニュース取得
+    print("\n--- 今日のニュース ---")
+    titles = get_news()
+    for i, t in enumerate(titles, 1):
+        print(f"{i}: {t}")
+
+    # 2. 株価取得
+    print("\n--- 最新株価 ---")
+    # 好きな銘柄を追加・変更できます（.Tは東京証券取引所）
+    target_stocks = {
+        "NVDA": "エヌビディア",
+        "7203.T": "トヨタ自動車",
+        "9984.T": "ソフトバンクG",
+        "AAPL": "アップル"
+    }
     
-    articles = soup.find_all("a")
+    stock_results = []
+    for ticker, name in target_stocks.items():
+        price = get_stock_price(ticker)
+        line = f"{name} ({ticker}): {price}"
+        print(line)
+        stock_results.append(line)
 
-    print(f"--- 取得結果 ---")
+    # 3. ファイル保存 (report.txt)
+    with open("report.txt", "w", encoding="utf-8") as f:
+        f.write(f"取得日時: {now_str}\n\n")
+        f.write("【ニュース】\n")
+        f.write("\n".join(titles) + "\n\n")
+        f.write("【株価】\n")
+        f.write("\n".join(stock_results))
     
-    # データを保存するためのリストを用意
-    results = []
-    
-    count = 1
-    for article in articles:
-        title = article.get_text(strip=True)
-        # 10文字以上、かつ「もっと見る」などの不要な言葉を除外
-        if len(title) > 10 and "一覧" not in title:
-            line = f"{count}: {title}"
-            print(line)
-            results.append(line)
-            count += 1
-            if count > 10: break
-
-    # --- ここからファイル保存処理 ---
-    with open("news_list.txt", "w", encoding="utf-8") as f:
-        f.write("\n".join(results))
-    
-    print("\n[完了] news_list.txt に保存しました！")
-
-except Exception as e:
-    print(f"エラーが発生しました: {e}")
+    print("\n[完了] report.txt に結果を保存しました！")
