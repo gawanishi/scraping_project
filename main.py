@@ -1,56 +1,81 @@
-import yfinance as yf
-import datetime
+import requests
+from bs4 import BeautifulSoup
 import time
+import datetime
+import yfinance as yf
 from plyer import notification
 
-# 監視リスト（銘柄コード、名前、下落率のしきい値）
+# --- 設定：ここを自由に書き換えてください ---
 WATCH_LIST = [
-    {"ticker": "NVDA", "name": "エヌビディア", "drop_limit": -5.0}, # -5%
-    {"ticker": "7203.T", "name": "トヨタ", "drop_limit": -3.0},   # -3%
+    {"ticker": "NVDA", "name": "エヌビディア", "limit": 5.0},  # 5%以上動いたら通知
+    {"ticker": "7203.T", "name": "トヨタ", "limit": 3.0},      # 3%以上動いたら通知
+    {"ticker": "9984.T", "name": "ソフトバンクG", "limit": 3.0}
 ]
 
+# 通知の重複防止用（1時間制限）
 last_alert_times = {}
 
-def check_stock_drop():
+def get_news():
+    """ヤフーニュースのトップを取得"""
+    url = "https://news.yahoo.co.jp/topics/top-picks"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+        titles = [a.get_text(strip=True) for a in soup.find_all("a") if len(a.get_text(strip=True)) > 15][:5]
+        return titles
+    except:
+        return ["ニュース取得失敗"]
+
+def check_stock_movement():
+    """株価の騰落をチェックして通知"""
     print(f"\n--- 騰落チェック: {datetime.datetime.now().strftime('%H:%M:%S')} ---")
     
     for item in WATCH_LIST:
         ticker = item["ticker"]
-        stock = yf.Ticker(ticker)
-        # 過去2日分のデータを取得（前日の終値を知るため）
-        data = stock.history(period="2d")
-        
-        if len(data) < 2:
-            print(f"{item['name']}: 比較データが足りません")
-            continue
+        try:
+            stock = yf.Ticker(ticker)
+            data = stock.history(period="2d")
+            if len(data) < 2: continue
             
-        prev_close = data['Close'].iloc[-2] # 前日の終値
-        current_price = data['Close'].iloc[-1] # 現在の価格
-        
-        # 騰落率の計算: ((現在値 - 前日終値) / 前日終値) * 100
-        change_percent = ((current_price - prev_close) / prev_close) * 100
-        
-        print(f"{item['name']}: {current_price:.2f}円 (前日比: {change_percent:+.2f}%)")
+            prev_close = data['Close'].iloc[-2]
+            current_price = data['Close'].iloc[-1]
+            change_percent = ((current_price - prev_close) / prev_close) * 100
+            
+            print(f"{item['name']}: {current_price:.2f}円 ({change_percent:+.2f}%)")
 
-        # 通知判定: 設定した下落率（drop_limit）よりも大きく下がっていたら通知
-        if change_percent <= item["drop_limit"]:
-            now = datetime.datetime.now()
-            last_time = last_alert_times.get(ticker)
+            # 判定ロジック
+            is_alert = False
+            status_msg = ""
+            if change_percent <= -item["limit"]:
+                is_alert = True
+                status_msg = f"📉【急落】{change_percent:.2f}% 下落！"
+            elif change_percent >= item["limit"]:
+                is_alert = True
+                status_msg = f"🚀【急騰】{change_percent:.2f}% 上昇！"
 
-            # 1時間以内の重複通知を避ける
-            if last_time is None or (now - last_time).total_seconds() > 3600:
-                msg = f"【急落アラート】\n{item['name']}が前日比 {change_percent:.2f}% 下落しました！\n現在値: {current_price:.2f}円"
-                
-                notification.notify(title="株価急落アラート", message=msg, timeout=10)
-                # もしDiscordやLINEを作ったらここに送信関数を入れる
-                
-                last_alert_times[ticker] = now
-                print(f"!!! アラート送信完了: {item['name']} !!!")
+            if is_alert:
+                now = datetime.datetime.now()
+                last_time = last_alert_times.get(ticker)
+                if last_time is None or (now - last_time).total_seconds() > 3600:
+                    msg = f"{status_msg}\n{item['name']}: {current_price:.2f}円"
+                    notification.notify(title="株価アラート", message=msg, timeout=10)
+                    last_alert_times[ticker] = now
+                    print(f"!!! 通知送信: {item['name']} !!!")
+        except Exception as e:
+            print(f"エラー({ticker}): {e}")
 
-# メインループ
-try:
-    while True:
-        check_stock_drop()
-        time.sleep(300) 
-except KeyboardInterrupt:
-    print("\n監視終了")
+# --- メイン処理 ---
+if __name__ == "__main__":
+    print("=== システム起動：ニュース取得中 ===")
+    news = get_news()
+    for n in news:
+        print(f"・{n}")
+    
+    print("\n株価の常時監視を開始します（終了は Ctrl + C）")
+    try:
+        while True:
+            check_stock_movement()
+            time.sleep(300) # 5分おきにチェック
+    except KeyboardInterrupt:
+        print("\n監視を終了しました。")
