@@ -1,40 +1,51 @@
 import yfinance as yf
-from plyer import notification # 通知用ライブラリ
+import time
+import datetime
+from plyer import notification
 
-def check_stock_alert(ticker, name, target_price, direction="above"):
-    """
-    株価をチェックして、目標値を超えたら通知を出す関数
-    direction: "above" (以上) または "below" (以下)
-    """
-    stock = yf.Ticker(ticker)
-    data = stock.history(period="1d")
+# 監視したい銘柄の設定 (銘柄コード, 名前, 目標価格, 条件)
+WATCH_LIST = [
+    {"ticker": "NVDA", "name": "エヌビディア", "target": 130, "direction": "above"},
+    {"ticker": "7203.T", "name": "トヨタ", "target": 2500, "direction": "below"},
+]
+
+def check_stocks():
+    print(f"\n--- チェック開始: {datetime.datetime.now().strftime('%H:%M:%S')} ---")
     
-    if data.empty:
-        return
+    for item in WATCH_LIST:
+        stock = yf.Ticker(item["ticker"])
+        data = stock.history(period="1d")
         
-    current_price = data['Close'].iloc[-1]
-    
-    # 条件判定
-    is_alert = False
-    if direction == "above" and current_price >= target_price:
-        is_alert = True
-        msg = f"{target_price}円を超えました！ (現在: {current_price:.2f}円)"
-    elif direction == "below" and current_price <= target_price:
-        is_alert = True
-        msg = f"{target_price}円を下回りました！ (現在: {current_price:.2f}円)"
+        if data.empty:
+            continue
+            
+        current_price = data['Close'].iloc[-1]
+        print(f"{item['name']}: {current_price:.2f}")
 
-    # 条件を満たしていたら、デスクトップ通知を飛ばす
-    if is_alert:
-        notification.notify(
-            title=f"【株価アラート】{name}",
-            message=msg,
-            app_name="Stock Monitor",
-            timeout=10 # 通知が表示される時間（秒）
-        )
-        print(f"!!! ALERT !!! {name}: {msg}")
+        # 通知判定
+        is_alert = False
+        if item["direction"] == "above" and current_price >= item["target"]:
+            is_alert = True
+        elif item["direction"] == "below" and current_price <= item["target"]:
+            is_alert = True
 
-# 実行例：トヨタが2500円以下になったら通知
-check_stock_alert("7203.T", "トヨタ自動車", 2500, direction="below")
+        if is_alert:
+            notification.notify(
+                title=f"【株価アラート】{item['name']}",
+                message=f"目標価格に達しました: {current_price:.2f}",
+                timeout=10
+            )
 
-# 実行例：エヌビディアが130ドル以上になったら通知
-check_stock_alert("NVDA", "エヌビディア", 130, direction="above")
+# --- メインループ ---
+print("株価監視ボットを起動しました（終了するには Ctrl + C を押してください）")
+
+try:
+    while True:
+        check_stocks()
+        
+        # 300秒（5分）待機
+        print("5分間待機します...")
+        time.sleep(300) 
+        
+except KeyboardInterrupt:
+    print("\n監視を終了しました。")
