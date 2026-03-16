@@ -1,61 +1,56 @@
 import yfinance as yf
-import time
 import datetime
+import time
 from plyer import notification
 
-# 監視設定
+# 監視リスト（銘柄コード、名前、下落率のしきい値）
 WATCH_LIST = [
-    {"ticker": "NVDA", "name": "エヌビディア", "target": 130, "direction": "above"},
-    {"ticker": "7203.T", "name": "トヨタ", "target": 2500, "direction": "below"},
+    {"ticker": "NVDA", "name": "エヌビディア", "drop_limit": -5.0}, # -5%
+    {"ticker": "7203.T", "name": "トヨタ", "drop_limit": -3.0},   # -3%
 ]
 
-# 各銘柄の「最後に通知した時間」を記録する辞書（最初は空っぽ）
 last_alert_times = {}
 
-def check_stocks():
-    print(f"\n--- チェック開始: {datetime.datetime.now().strftime('%H:%M:%S')} ---")
+def check_stock_drop():
+    print(f"\n--- 騰落チェック: {datetime.datetime.now().strftime('%H:%M:%S')} ---")
     
     for item in WATCH_LIST:
         ticker = item["ticker"]
         stock = yf.Ticker(ticker)
-        data = stock.history(period="1d")
+        # 過去2日分のデータを取得（前日の終値を知るため）
+        data = stock.history(period="2d")
         
-        if data.empty:
+        if len(data) < 2:
+            print(f"{item['name']}: 比較データが足りません")
             continue
             
-        current_price = data['Close'].iloc[-1]
-        print(f"{item['name']}: {current_price:.2f}")
+        prev_close = data['Close'].iloc[-2] # 前日の終値
+        current_price = data['Close'].iloc[-1] # 現在の価格
+        
+        # 騰落率の計算: ((現在値 - 前日終値) / 前日終値) * 100
+        change_percent = ((current_price - prev_close) / prev_close) * 100
+        
+        print(f"{item['name']}: {current_price:.2f}円 (前日比: {change_percent:+.2f}%)")
 
-        # 通知が必要かどうかの判定
-        is_alert_condition = False
-        if item["direction"] == "above" and current_price >= item["target"]:
-            is_alert_condition = True
-        elif item["direction"] == "below" and current_price <= item["target"]:
-            is_alert_condition = True
-
-        if is_alert_condition:
-            # --- 【追加】前回の通知から1時間（3600秒）経っているか確認 ---
+        # 通知判定: 設定した下落率（drop_limit）よりも大きく下がっていたら通知
+        if change_percent <= item["drop_limit"]:
             now = datetime.datetime.now()
-            last_time = last_alert_times.get(ticker) # 過去の通知時間を取得
+            last_time = last_alert_times.get(ticker)
 
-            # 初めての通知、または前回の通知から3600秒以上経過していたら実行
+            # 1時間以内の重複通知を避ける
             if last_time is None or (now - last_time).total_seconds() > 3600:
-                notification.notify(
-                    title=f"【株価アラート】{item['name']}",
-                    message=f"目標価格に達しました: {current_price:.2f}",
-                    timeout=10
-                )
-                # 通知した時間を記録（更新）
+                msg = f"【急落アラート】\n{item['name']}が前日比 {change_percent:.2f}% 下落しました！\n現在値: {current_price:.2f}円"
+                
+                notification.notify(title="株価急落アラート", message=msg, timeout=10)
+                # もしDiscordやLINEを作ったらここに送信関数を入れる
+                
                 last_alert_times[ticker] = now
-                print(f"!!! 通知を送信しました: {item['name']} !!!")
-            else:
-                # 1時間以内なので、条件は満たしているが通知はスキップ
-                print(f"（{item['name']}は条件を満たしていますが、1時間以内のため通知をスキップします）")
+                print(f"!!! アラート送信完了: {item['name']} !!!")
 
-# --- メインループ (変更なし) ---
+# メインループ
 try:
     while True:
-        check_stocks()
+        check_stock_drop()
         time.sleep(300) 
 except KeyboardInterrupt:
-    print("\n監視を終了しました。")
+    print("\n監視終了")
