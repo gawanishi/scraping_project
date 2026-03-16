@@ -1,0 +1,6 @@
+ticker,name,limit
+NVDA,エヌビディア,5.0
+7203.T,トヨタ,3.0
+9984.T,ソフトバンクG,3.0
+AAPL,アップル,4.0
+import csv
