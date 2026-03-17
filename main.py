@@ -4,7 +4,6 @@ import time
 import datetime
 import yfinance as yf
 import csv
-import matplotlib.pyplot as plt
 from plyer import notification
 
 # --- 1. ログ保存機能 ---
@@ -13,29 +12,66 @@ def save_log(message):
     with open('report.txt', 'a', encoding='utf-8') as f:
         f.write(f"[{now}] {message}\n")
 
-# --- 2. ニュース取得（複数サイト） ---
-def get_all_news():
-    print("=== ニュースを取得中 ===")
-    # ヤフー
-    y_url = "https://news.yahoo.co.jp/topics/top-picks"
-    y_res = requests.get(y_url, headers={"User-Agent": "Mozilla/5.0"})
-    y_soup = BeautifulSoup(y_res.text, "html.parser")
-    y_titles = [a.get_text(strip=True) for a in y_soup.find_all("a") if len(a.get_text(strip=True)) > 15][:3]
+# --- 2. HTML Webページ生成機能 ---
+def update_web_page(summary, news_list):
+    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
-    print("【Yahoo!ニュース】")
-    for t in y_titles: print(f" ・{t}")
+    # HTMLの組み立て（見た目の設定）
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>株価ダッシュボード</title>
+        <style>
+            body {{ font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }}
+            .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }}
+            h1 {{ color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; text-align: center; }}
+            h3 {{ color: #2980b9; margin-top: 30px; border-left: 5px solid #2980b9; padding-left: 10px; }}
+            .stock-item {{ padding: 15px; border-bottom: 1px solid #eee; font-size: 1.2em; font-weight: bold; display: flex; justify-content: space-between; }}
+            .news-item {{ padding: 8px 0; border-bottom: 1px dashed #ccc; color: #444; }}
+            .time {{ text-align: right; color: #7f8c8d; font-size: 0.9em; margin-bottom: 20px; }}
+            .status-up {{ color: #e74c3c; }} /* 上昇は赤（日本式） */
+            .status-down {{ color: #27ae60; }} /* 下落は緑 */
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📊 投資ダッシュボード</h1>
+            <p class="time">最終更新日時: {now}</p>
+            
+            <h3>📈 現在の株価状況</h3>
+            {"".join([f'<div class="stock-item">{item}</div>' for item in summary])}
+            
+            <h3>📰 最新ニュース</h3>
+            {"".join([f'<div class="news-item">・{n}</div>' for n in news_list])}
+        </div>
+    </body>
+    </html>
+    """
+    
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print("🌐 Webページを更新しました (index.html)")
 
-    # ロイター（例として簡易的な取得）
-    print("\n【経済ニュース(Reuters/他)】")
-    # ※実際のスクレイピングは各サイトの規約や構造に合わせる必要があります
-    # ここでは例としてYahooの経済カテゴリーを併用
-    e_url = "https://news.yahoo.co.jp/categories/business"
-    e_res = requests.get(e_url, headers={"User-Agent": "Mozilla/5.0"})
-    e_soup = BeautifulSoup(e_res.text, "html.parser")
-    e_titles = [a.get_text(strip=True) for a in e_soup.find_all("a") if len(a.get_text(strip=True)) > 15][:3]
-    for t in e_titles: print(f" ・{t}")
+# --- 3. ニュース取得 ---
+def get_all_news():
+    headers = {"User-Agent": "Mozilla/5.0"}
+    all_titles = []
+    
+    # Yahoo 主要ニュース
+    try:
+        res = requests.get("https://news.yahoo.co.jp/topics/top-picks", headers=headers, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+        titles = [a.get_text(strip=True) for a in soup.find_all("a") if len(a.get_text(strip=True)) > 15][:4]
+        all_titles.extend(titles)
+    except:
+        all_titles.append("ニュース取得失敗")
+    
+    return all_titles
 
-# --- (既存のload_settings, save_chartはそのまま) ---
+# --- 4. 監視設定ロード ---
 def load_settings():
     watch_list = []
     try:
@@ -44,8 +80,10 @@ def load_settings():
             for row in reader:
                 watch_list.append({"ticker": row["ticker"], "name": row["name"], "limit": float(row["limit"])})
         return watch_list
-    except: return []
+    except:
+        return []
 
+# --- 5. メイン監視ロジック ---
 def check_stock_movement(watch_list):
     print(f"\n--- 騰落チェック: {datetime.datetime.now().strftime('%H:%M:%S')} ---")
     summary = []
@@ -61,29 +99,46 @@ def check_stock_movement(watch_list):
             
             log_msg = f"{item['name']}: {current_price:.2f}円 ({change_percent:+.2f}%)"
             print(log_msg)
-            save_log(log_msg) # ログに書き込み！
+            save_log(log_msg)
             summary.append(log_msg)
 
-            # (通知判定ロジックは前回と同じ)
+            # アラート通知
             if abs(change_percent) >= item["limit"]:
                 status = "🚀【急騰】" if change_percent > 0 else "📉【急落】"
                 msg = f"{status}{change_percent:.2f}%\n{item['name']}: {current_price:.2f}円"
                 notification.notify(title="株価アラート", message=msg, timeout=10)
-        except Exception as e: print(f"エラー({ticker}): {e}")
+        except Exception as e:
+            print(f"エラー({ticker}): {e}")
     return summary
 
+# --- 6. 実行メイン ---
 if __name__ == "__main__":
-    get_all_news()
+    print("=== システム起動 ===")
+    
     current_watch_list = load_settings()
-    if not current_watch_list: exit()
+    if not current_watch_list:
+        print("設定ファイルが見つかりません。")
+        exit()
     
     count = 0
     try:
         while True:
+            # 最新ニュースを取得
+            latest_news = get_all_news()
+            
+            # 株価チェック
             current_summary = check_stock_movement(current_watch_list)
+            
+            # 🌐 Webページ(index.html)を生成
+            update_web_page(current_summary, latest_news)
+            
             count += 1
-            if count >= 12:
+            if count >= 12: # 1時間ごとに通知
                 notification.notify(title="【定期報告】", message="\n".join(current_summary))
                 count = 0
+            
+            print("5分間待機中...")
             time.sleep(300)
-    except KeyboardInterrupt: print("\n終了")
+            
+    except KeyboardInterrupt:
+        print("\n監視を終了しました。") # ←ここをしっかり閉じる！

@@ -1,0 +1,33 @@
+
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>株価ダッシュボード</title>
+        <style>
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+            .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+            h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; text-align: center; }
+            h3 { color: #2980b9; margin-top: 30px; border-left: 5px solid #2980b9; padding-left: 10px; }
+            .stock-item { padding: 15px; border-bottom: 1px solid #eee; font-size: 1.2em; font-weight: bold; display: flex; justify-content: space-between; }
+            .news-item { padding: 8px 0; border-bottom: 1px dashed #ccc; color: #444; }
+            .time { text-align: right; color: #7f8c8d; font-size: 0.9em; margin-bottom: 20px; }
+            .status-up { color: #e74c3c; } /* 上昇は赤（日本式） */
+            .status-down { color: #27ae60; } /* 下落は緑 */
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📊 投資ダッシュボード</h1>
+            <p class="time">最終更新日時: 2026-03-17 18:02:14</p>
+            
+            <h3>📈 現在の株価状況</h3>
+            <div class="stock-item">エヌビディア: 183.22円 (+1.65%)</div><div class="stock-item">トヨタ: 3379.00円 (+1.23%)</div><div class="stock-item">ソフトバンクG: 3544.00円 (-1.80%)</div>
+            
+            <h3>📰 最新ニュース</h3>
+            <div class="news-item">・JavaScriptの設定を変更する方法はこちら</div><div class="news-item">・俳優・青柳文太郎さん死去 70歳3/17(火) 17:45</div><div class="news-item">・キューバ 送電網が全面的に崩壊3/17(火) 17:24</div><div class="news-item">・首相 さらなる消費増税考えてない3/17(火) 17:06</div>
+        </div>
+    </body>
+    </html>
+    
