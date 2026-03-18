@@ -6,27 +6,52 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>株価ダッシュボード</title>
         <style>
-            body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
-            .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+            body { 
+                font-family: 'Helvetica Neue', Arial, sans-serif; 
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+                min-height: 100vh;
+                padding: 20px; 
+                color: #333; 
+            }
+            .container { 
+                max-width: 800px; 
+                margin: 0 auto; 
+                background: white; 
+                padding: 30px; 
+                border-radius: 15px; 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            }
             h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; text-align: center; }
             h3 { color: #2980b9; margin-top: 30px; border-left: 5px solid #2980b9; padding-left: 10px; }
-            .stock-item { padding: 15px; border-bottom: 1px solid #eee; font-size: 1.2em; font-weight: bold; display: flex; justify-content: space-between; }
+            .stock-item { 
+                padding: 15px; 
+                border-bottom: 2px solid #3498db; 
+                font-size: 2.0em; 
+                font-weight: 900; 
+                color: #2c3e50;
+                display: flex; 
+                justify-content: space-between; 
+            }
+            .stock-item:hover {
+                background-color: #f1f9ff;
+                transform: scale(1.02);
+                transition: 0.3s;
+                cursor: pointer;
+            }
             .news-item { padding: 8px 0; border-bottom: 1px dashed #ccc; color: #444; }
             .time { text-align: right; color: #7f8c8d; font-size: 0.9em; margin-bottom: 20px; }
-            .status-up { color: #e74c3c; } /* 上昇は赤（日本式） */
-            .status-down { color: #27ae60; } /* 下落は緑 */
         </style>
     </head>
     <body>
         <div class="container">
             <h1>📊 投資ダッシュボード</h1>
-            <p class="time">最終更新日時: 2026-03-18 09:56:51</p>
+            <p class="time">最終更新日時: 2026-03-18 16:55:52</p>
             
             <h3>📈 現在の株価状況</h3>
-            <div class="stock-item">エヌビディア: 181.93円 (-0.70%)</div><div class="stock-item">トヨタ: 3403.00円 (+0.71%)</div><div class="stock-item">ソフトバンクG: 3712.00円 (+4.74%)</div>
+            <div class="stock-item">エヌビディア: 181.93円 (-0.70%)</div><div class="stock-item">トヨタ: 3404.00円 (+0.74%)</div><div class="stock-item">ソフトバンクG: 3750.00円 (+5.81%)</div>
             
             <h3>📰 最新ニュース</h3>
-            <div class="news-item">・JavaScriptの設定を変更する方法はこちら</div><div class="news-item">・村上宗隆がOP戦1号 確信アーチ3/18(水) 9:35</div><div class="news-item">・イラン 米との緊張緩和案を拒否3/18(水) 9:19</div><div class="news-item">・2000円超「せっけん」なぜ売れる3/18(水) 9:15</div>
+            <div class="news-item">・JavaScriptの設定を変更する方法はこちら</div><div class="news-item">・首相 トランプ氏と桜の記念植樹へ3/18(水) 16:20</div><div class="news-item">・WBC決勝 オリ守護神が勝利投手3/18(水) 16:13</div><div class="news-item">・日経平均が反発 終値5万5239円3/18(水) 15:51</div>
         </div>
     </body>
     </html>

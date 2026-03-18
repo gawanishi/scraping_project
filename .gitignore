@@ -7,3 +7,6 @@ __pycache__/
 # OSが勝手に作る管理ファイル
 .DS_Store
 Thumbs.db
+
+report.txt
+*.png

@@ -16,7 +16,7 @@ def save_log(message):
 def update_web_page(summary, news_list):
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
-    # HTMLの組み立て（見た目の設定）
+    # CSSの波括弧だけを {{ }} にしています
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
@@ -25,15 +25,40 @@ def update_web_page(summary, news_list):
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>株価ダッシュボード</title>
         <style>
-            body {{ font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }}
-            .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }}
+            body {{ 
+                font-family: 'Helvetica Neue', Arial, sans-serif; 
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+                min-height: 100vh;
+                padding: 20px; 
+                color: #333; 
+            }}
+            .container {{ 
+                max-width: 800px; 
+                margin: 0 auto; 
+                background: white; 
+                padding: 30px; 
+                border-radius: 15px; 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            }}
             h1 {{ color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; text-align: center; }}
             h3 {{ color: #2980b9; margin-top: 30px; border-left: 5px solid #2980b9; padding-left: 10px; }}
-            .stock-item {{ padding: 15px; border-bottom: 1px solid #eee; font-size: 1.2em; font-weight: bold; display: flex; justify-content: space-between; }}
+            .stock-item {{ 
+                padding: 15px; 
+                border-bottom: 2px solid #3498db; 
+                font-size: 2.0em; 
+                font-weight: 900; 
+                color: #2c3e50;
+                display: flex; 
+                justify-content: space-between; 
+            }}
+            .stock-item:hover {{
+                background-color: #f1f9ff;
+                transform: scale(1.02);
+                transition: 0.3s;
+                cursor: pointer;
+            }}
             .news-item {{ padding: 8px 0; border-bottom: 1px dashed #ccc; color: #444; }}
             .time {{ text-align: right; color: #7f8c8d; font-size: 0.9em; margin-bottom: 20px; }}
-            .status-up {{ color: #e74c3c; }} /* 上昇は赤（日本式） */
-            .status-down {{ color: #27ae60; }} /* 下落は緑 */
         </style>
     </head>
     <body>
@@ -59,8 +84,6 @@ def update_web_page(summary, news_list):
 def get_all_news():
     headers = {"User-Agent": "Mozilla/5.0"}
     all_titles = []
-    
-    # Yahoo 主要ニュース
     try:
         res = requests.get("https://news.yahoo.co.jp/topics/top-picks", headers=headers, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
@@ -68,7 +91,6 @@ def get_all_news():
         all_titles.extend(titles)
     except:
         all_titles.append("ニュース取得失敗")
-    
     return all_titles
 
 # --- 4. 監視設定ロード ---
@@ -78,9 +100,11 @@ def load_settings():
         with open('stocks.csv', 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
+                # ここはPythonの辞書なので { } で正解！
                 watch_list.append({"ticker": row["ticker"], "name": row["name"], "limit": float(row["limit"])})
         return watch_list
-    except:
+    except Exception as e:
+        print(f"エラー: {e}")
         return []
 
 # --- 5. メイン監視ロジック ---
@@ -102,7 +126,6 @@ def check_stock_movement(watch_list):
             save_log(log_msg)
             summary.append(log_msg)
 
-            # アラート通知
             if abs(change_percent) >= item["limit"]:
                 status = "🚀【急騰】" if change_percent > 0 else "📉【急落】"
                 msg = f"{status}{change_percent:.2f}%\n{item['name']}: {current_price:.2f}円"
@@ -114,31 +137,24 @@ def check_stock_movement(watch_list):
 # --- 6. 実行メイン ---
 if __name__ == "__main__":
     print("=== システム起動 ===")
-    
     current_watch_list = load_settings()
     if not current_watch_list:
-        print("設定ファイルが見つかりません。")
+        print("設定ファイルが読み込めませんでした。stocks.csvを確認してください。")
         exit()
     
     count = 0
     try:
         while True:
-            # 最新ニュースを取得
             latest_news = get_all_news()
-            
-            # 株価チェック
             current_summary = check_stock_movement(current_watch_list)
-            
-            # 🌐 Webページ(index.html)を生成
             update_web_page(current_summary, latest_news)
             
             count += 1
-            if count >= 12: # 1時間ごとに通知
+            if count >= 12:
                 notification.notify(title="【定期報告】", message="\n".join(current_summary))
                 count = 0
             
             print("5分間待機中...")
             time.sleep(300)
-            
     except KeyboardInterrupt:
-        print("\n監視を終了しました。") # ←ここをしっかり閉じる！
+        print("\n監視を終了しました。")
