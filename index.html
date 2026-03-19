@@ -6,44 +6,47 @@
         <title>プロ仕様・株価ダッシュボード</title>
         <style>
             body { font-family: 'Segoe UI', Meiryo, sans-serif; background: #1a1a1a; color: #eee; padding: 40px; }
-            .container { max-width: 900px; margin: 0 auto; background: #2d2d2d; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-            h1 { text-align: center; color: #fff; margin-bottom: 30px; }
-            
-            .stock-item { 
-                background: #3d3d3d; margin-bottom: 15px; padding: 20px; border-radius: 0 10px 10px 0;
-                font-size: 1.5em; font-weight: bold; display: flex; justify-content: space-between; transition: 0.2s;
-            }
-            .stock-item:hover { transform: translateX(10px); }
+            .container { max-width: 900px; margin: 0 auto; background: #2d2d2d; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: 0.5s; }
+            h1 { text-align: center; color: #fff; margin-bottom: 10px; }
+            .controls { text-align: center; margin-bottom: 30px; }
+            #update-btn { background: #3498db; color: white; border: none; padding: 10px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+            .stock-item { background: #3d3d3d; margin-bottom: 15px; padding: 20px; border-radius: 0 10px 10px 0; font-size: 1.5em; font-weight: bold; display: flex; justify-content: space-between; transition: 0.2s; }
             .status-up { color: #ff4d4d; border-left: 10px solid #ff4d4d; padding-left: 15px; }
             .status-down { color: #00fa9a; border-left: 10px solid #00fa9a; padding-left: 15px; }
-
             .news-item { padding: 12px; border-bottom: 1px solid #444; }
-            .news-item a { color: #3498db; text-decoration: none; transition: 0.3s; font-size: 1.1em; }
-            .news-item a:hover { color: #5dade2; text-decoration: underline; }
-            
-            .time { text-align: right; color: #888; margin-bottom: 10px; }
+            .news-item a { color: #3498db; text-decoration: none; font-size: 1.1em; }
+            .info-bar { display: flex; justify-content: space-between; color: #888; font-size: 0.9em; margin-bottom: 10px; }
         </style>
     </head>
     <body>
         <div class="container">
             <h1>📈 MARKET DASHBOARD</h1>
-            <p class="time">LAST UPDATE: 2026-03-19 14:06:15</p>
+            <div class="info-bar">
+                <span>現在時刻: <span id="realtime-clock">...</span></span>
+                <span>データ最終更新: 2026-03-19 14:21:30</span>
+            </div>
+            <div class="controls"><button id="update-btn" onclick="refreshEffect()">最新情報に更新</button></div>
             <h3>💹 監視銘柄</h3>
-            <div class="stock-item status-down">エヌビディア: 180.40円 (-0.84%)</div><div class="stock-item status-down">トヨタ: 3331.00円 (-2.14%)</div><div class="stock-item status-down">ソフトバンクG: 3555.00円 (-5.20%)</div>
-            <h3>📰 ヘッドライン (クリックで記事へ)</h3>
-            <div class="news-item"><a href="https://support.yahoo-net.jp/noscript" target="_blank">・JavaScriptの設定を変更する方法はこちら</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573598" target="_blank">・昨夏V 沖縄尚学まさかの初戦敗退3/19(木) 13:41</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573597" target="_blank">・日産「6500億円赤字」現状を解説3/19(木) 13:33</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573596" target="_blank">・松本純氏が死去 元国家公安委員長3/19(木) 13:28</a></div>
+            <div class="stock-item status-down">エヌビディア: 180.40円 (-0.84%)</div><div class="stock-item status-down">トヨタ: 3337.00円 (-1.97%)</div><div class="stock-item status-down">ソフトバンクG: 3558.00円 (-5.12%)</div>
+            <h3>📰 ヘッドライン</h3>
+            <div class="news-item"><a href="https://support.yahoo-net.jp/noscript" target="_blank">・JavaScriptの設定を変更する方法はこちら</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573601" target="_blank">・東京で桜が開花 昨年より5日早く3/19(木) 14:13</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573598" target="_blank">・昨夏V 沖縄尚学まさかの初戦敗退3/19(木) 13:41</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573597" target="_blank">・日産「6500億円赤字」現状を解説3/19(木) 13:33</a></div>
         </div>
-        <p class="time">現在時刻: <span id="realtime-clock">読み込み中...</span></p>
         <script>
-        function updateClock() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('ja-JP');
-        document.getElementById('realtime-clock').innerText = timeString;
-         }
-        // 1秒(1000ミリ秒)ごとにupdateClockを実行する
-         setInterval(updateClock, 1000);
-         updateClock(); // 最初の一回を実行
-     </script>
+            function updateClock() {
+                const now = new Date();
+                document.getElementById('realtime-clock').innerText = now.toLocaleTimeString('ja-JP');
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+            function refreshEffect() {
+                const btn = document.getElementById('update-btn');
+                btn.innerText = "更新確認中...";
+                setTimeout(() => {
+                    btn.innerText = "最新情報に更新";
+                    alert("Python側で5分ごとに自動更新されます。");
+                }, 1200);
+            }
+        </script>
     </body>
     </html>
     
