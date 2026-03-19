@@ -9,12 +9,40 @@
         h1 { text-align: center; color: #fff; margin-bottom: 10px; }
         .controls { text-align: center; margin-bottom: 30px; }
         #update-btn { background: #3498db; color: white; border: none; padding: 10px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .stock-item { background: #3d3d3d; margin-bottom: 15px; padding: 20px; border-radius: 0 10px 10px 0; font-size: 1.5em; font-weight: bold; display: flex; justify-content: space-between; transition: 0.2s; }
-        .status-up { color: #ff4d4d; border-left: 10px solid #ff4d4d; padding-left: 15px; }
-        .status-down { color: #00fa9a; border-left: 10px solid #00fa9a; padding-left: 15px; }
-        .news-item { padding: 12px; border-bottom: 1px solid #444; }
+        
+        /* --- アニメーション --- */
+        @keyframes pulse-up {
+            0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+        }
+        @keyframes pulse-down {
+            0% { box-shadow: 0 0 0 0 rgba(0, 250, 154, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 250, 154, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 250, 154, 0); }
+        }
+
+        /* --- 銘柄カード --- */
+        .stock-item {
+            background: linear-gradient(145deg, #3d3d3d, #2b2b2b);
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.4em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #444;
+            transition: 0.3s;
+        }
+        .status-up { color: #ff4d4d; border-left: 8px solid #ff4d4d; animation: pulse-up 2s infinite; }
+        .status-down { color: #00fa9a; border-left: 8px solid #00fa9a; animation: pulse-down 2s infinite; }
+
+        /* --- ニュース --- */
+        .news-item { background: #333; margin: 10px 0; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; transition: 0.3s; }
+        .news-item:hover { background: #444; transform: translateX(10px); }
         .news-item a { color: #3498db; text-decoration: none; font-size: 1.1em; }
-        .news-item a:hover { text-decoration: underline; }
+        
         .info-bar { display: flex; justify-content: space-between; color: #888; font-size: 0.9em; margin-bottom: 10px; }
     </style>
 </head>
@@ -35,51 +63,65 @@
     </div>
 
     <script>
+        // 時計
         function updateClock() {
             document.getElementById('realtime-clock').innerText = new Date().toLocaleTimeString('ja-JP');
         }
         setInterval(updateClock, 1000);
         updateClock();
 
+        // メインの更新処理
         async function refreshEffect() {
             const btn = document.getElementById('update-btn');
             const container = document.querySelector('.container');
+            const stockList = document.getElementById('stock-list');
+            const newsList = document.getElementById('news-list');
+            
+            // 1. 通信開始の演出
             btn.innerText = "通信中...";
             btn.style.background = "#e67e22";
             container.style.opacity = "0.5";
 
             try {
+                // 2. Pythonサーバーからデータを取得
                 const response = await fetch('/api/update');
                 const data = await response.json();
 
-                // 1. 株価更新
-                const stockList = document.getElementById('stock-list');
+                // 3. 株価カードを生成（ここが修正ポイント！）
                 stockList.innerHTML = "";
-                data.stocks.forEach(stock => {
+                data.stocks.forEach((stock, index) => {
                     const status = stock.change >= 0 ? 'status-up' : 'status-down';
-                    stockList.innerHTML += `<div class="stock-item ${status}">
-                        <span>${stock.name}</span>
-                        <span>${stock.price.toLocaleString()}円 (${stock.change > 0 ? '+' : ''}${stock.change}%)</span>
-                    </div>`;
+                    const sign = stock.change > 0 ? '▲' : '▼';
+                    
+                    stockList.innerHTML += `
+                        <div class="stock-item ${status}" style="animation-delay: ${index * 0.1}s">
+                            <span>${stock.name}</span>
+                            <span>${sign} ${stock.price.toLocaleString()}円 (${stock.change > 0 ? '+' : ''}${stock.change}%)</span>
+                        </div>`;
                 });
 
-                // 2. ニュース更新
-                const newsList = document.getElementById('news-list');
+                // 4. ニュースリストを生成
                 newsList.innerHTML = "";
                 data.news.forEach(item => {
-                    newsList.innerHTML += `<div class="news-item"><a href="${item.url}" target="_blank">${item.title}</a></div>`;
+                    newsList.innerHTML += `
+                        <div class="news-item">
+                            <a href="${item.url}" target="_blank">${item.title}</a>
+                        </div>`;
                 });
 
                 document.getElementById('last-update-time').innerText = new Date().toLocaleTimeString();
+
             } catch (error) {
                 console.error("Error:", error);
                 alert("データの取得に失敗しました。");
             }
 
+            // 5. 演出終了
             btn.innerText = "最新情報に更新";
             btn.style.background = "#3498db";
             container.style.opacity = "1";
         }
+
         window.onload = refreshEffect;
     </script>
 </body>
