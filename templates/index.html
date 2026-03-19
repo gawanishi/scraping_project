@@ -23,29 +23,58 @@
             <h1>📈 MARKET DASHBOARD</h1>
             <div class="info-bar">
                 <span>現在時刻: <span id="realtime-clock">...</span></span>
-                <span>データ最終更新: 2026-03-19 14:21:30</span>
+                <span>データ最終更新: 2026-03-19 14:24:53</span>
             </div>
             <div class="controls"><button id="update-btn" onclick="refreshEffect()">最新情報に更新</button></div>
             <h3>💹 監視銘柄</h3>
-            <div class="stock-item status-down">エヌビディア: 180.40円 (-0.84%)</div><div class="stock-item status-down">トヨタ: 3337.00円 (-1.97%)</div><div class="stock-item status-down">ソフトバンクG: 3558.00円 (-5.12%)</div>
+            <div class="stock-item status-down">エヌビディア: 180.40円 (-0.84%)</div><div class="stock-item status-down">トヨタ: 3339.00円 (-1.91%)</div><div class="stock-item status-down">ソフトバンクG: 3561.00円 (-5.04%)</div>
             <h3>📰 ヘッドライン</h3>
             <div class="news-item"><a href="https://support.yahoo-net.jp/noscript" target="_blank">・JavaScriptの設定を変更する方法はこちら</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573601" target="_blank">・東京で桜が開花 昨年より5日早く3/19(木) 14:13</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573598" target="_blank">・昨夏V 沖縄尚学まさかの初戦敗退3/19(木) 13:41</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573597" target="_blank">・日産「6500億円赤字」現状を解説3/19(木) 13:33</a></div>
         </div>
         <script>
-            function updateClock() {
+            // 1. リアルタイム時計（これはそのまま）
+                function updateClock() {
                 const now = new Date();
-                document.getElementById('realtime-clock').innerText = now.toLocaleTimeString('ja-JP');
-            }
-            setInterval(updateClock, 1000);
-            updateClock();
-            function refreshEffect() {
-                const btn = document.getElementById('update-btn');
-                btn.innerText = "更新確認中...";
-                setTimeout(() => {
-                    btn.innerText = "最新情報に更新";
-                    alert("Python側で5分ごとに自動更新されます。");
-                }, 1200);
-            }
+                document.getElementById('realtime-clock').innerText = now.toLocaleTimeString('ja-JP');}
+                setInterval(updateClock, 1000);
+                updateClock();
+
+// 2. ★ここが本物の通信 (Fetch API)★
+async function refreshEffect() {
+    const btn = document.getElementById('update-btn');
+    const container = document.querySelector('.container');
+    
+    // 見た目の演出開始
+    btn.innerText = "サーバーと通信中...";
+    btn.style.background = "#e67e22"; // オレンジ色に
+    container.style.opacity = "0.5";
+
+    try {
+        // Python(Flask)の '/api/update' という窓口にデータをリクエスト
+        const response = await fetch('/api/update');
+        const data = await response.json(); // 届いたデータを解析
+
+        // 届いた最新データで画面の文字を書き換える！
+        // ※今回は一番上の銘柄を書き換える例です
+        const stockItem = document.querySelector('.stock-item');
+        stockItem.innerText = `${data.name}: ${data.price}円 (${data.change > 0 ? '+' : ''}${data.change}%)`;
+        
+        // 色も判定して変える
+        stockItem.className = `stock-item ${data.change >= 0 ? 'status-up' : 'status-down'}`;
+
+        console.log("最新データを取得しました:", data);
+    } catch (error) {
+        console.error("通信エラー:", error);
+        alert("サーバーとの通信に失敗しました。");
+    }
+
+    // 演出終了
+    setTimeout(() => {
+        btn.innerText = "最新情報に更新";
+        btn.style.background = "#3498db";
+        container.style.opacity = "1";
+    }, 500);
+}
         </script>
     </body>
     </html>
