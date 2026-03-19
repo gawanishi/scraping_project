@@ -9,14 +9,12 @@
         h1 { text-align: center; color: #fff; margin-bottom: 10px; }
         .controls { text-align: center; margin-bottom: 30px; }
         #update-btn { background: #3498db; color: white; border: none; padding: 10px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        
-        /* 銘柄カードのスタイル */
         .stock-item { background: #3d3d3d; margin-bottom: 15px; padding: 20px; border-radius: 0 10px 10px 0; font-size: 1.5em; font-weight: bold; display: flex; justify-content: space-between; transition: 0.2s; }
         .status-up { color: #ff4d4d; border-left: 10px solid #ff4d4d; padding-left: 15px; }
         .status-down { color: #00fa9a; border-left: 10px solid #00fa9a; padding-left: 15px; }
-
         .news-item { padding: 12px; border-bottom: 1px solid #444; }
         .news-item a { color: #3498db; text-decoration: none; font-size: 1.1em; }
+        .news-item a:hover { text-decoration: underline; }
         .info-bar { display: flex; justify-content: space-between; color: #888; font-size: 0.9em; margin-bottom: 10px; }
     </style>
 </head>
@@ -27,68 +25,61 @@
             <span>現在時刻: <span id="realtime-clock">...</span></span>
             <span>最終更新: <span id="last-update-time">起動中...</span></span>
         </div>
-        
-        <div class="controls">
-            <button id="update-btn" onclick="refreshEffect()">最新情報に更新</button>
-        </div>
+        <div class="controls"><button id="update-btn" onclick="refreshEffect()">最新情報に更新</button></div>
         
         <h3>💹 監視銘柄</h3>
-        <div id="stock-list">
-            <div class="stock-item">データを読み込み中...</div>
-        </div>
+        <div id="stock-list"><div class="stock-item">読み込み中...</div></div>
         
-        <h3>📰 ヘッドライン</h3>
-        <div id="news-list">
-            <div class="news-item">ニュース取得中...</div>
-        </div>
+        <h3>📰 最新ニュース</h3>
+        <div id="news-list"><div class="news-item">ニュース取得中...</div></div>
     </div>
 
     <script>
-        // 1. 時計
         function updateClock() {
             document.getElementById('realtime-clock').innerText = new Date().toLocaleTimeString('ja-JP');
         }
         setInterval(updateClock, 1000);
         updateClock();
 
-        // 2. 本物の更新処理
         async function refreshEffect() {
             const btn = document.getElementById('update-btn');
             const container = document.querySelector('.container');
-            const stockListContainer = document.getElementById('stock-list');
-            
             btn.innerText = "通信中...";
             btn.style.background = "#e67e22";
             container.style.opacity = "0.5";
 
             try {
                 const response = await fetch('/api/update');
-                const dataList = await response.json(); // Pythonからリストを受け取る
+                const data = await response.json();
 
-                // 画面を一度空にしてから、届いたリストの分だけ作る
-                stockListContainer.innerHTML = "";
-                dataList.forEach(stock => {
-                    const statusClass = stock.change >= 0 ? 'status-up' : 'status-down';
-                    const sign = stock.change > 0 ? '+' : '';
-                    stockListContainer.innerHTML += `
-                        <div class="stock-item ${statusClass}">
-                            <span>${stock.name}</span>
-                            <span>${stock.price.toLocaleString()}円 (${sign}${stock.change}%)</span>
-                        </div>`;
+                // 1. 株価更新
+                const stockList = document.getElementById('stock-list');
+                stockList.innerHTML = "";
+                data.stocks.forEach(stock => {
+                    const status = stock.change >= 0 ? 'status-up' : 'status-down';
+                    stockList.innerHTML += `<div class="stock-item ${status}">
+                        <span>${stock.name}</span>
+                        <span>${stock.price.toLocaleString()}円 (${stock.change > 0 ? '+' : ''}${stock.change}%)</span>
+                    </div>`;
+                });
+
+                // 2. ニュース更新
+                const newsList = document.getElementById('news-list');
+                newsList.innerHTML = "";
+                data.news.forEach(item => {
+                    newsList.innerHTML += `<div class="news-item"><a href="${item.url}" target="_blank">${item.title}</a></div>`;
                 });
 
                 document.getElementById('last-update-time').innerText = new Date().toLocaleTimeString();
             } catch (error) {
-                console.error("エラー:", error);
-                alert("データの取得に失敗しました。app.pyが動いているか確認してください。");
+                console.error("Error:", error);
+                alert("データの取得に失敗しました。");
             }
 
             btn.innerText = "最新情報に更新";
             btn.style.background = "#3498db";
             container.style.opacity = "1";
         }
-
-        // 起動時に一回自動で読み込む
         window.onload = refreshEffect;
     </script>
 </body>
