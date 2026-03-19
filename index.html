@@ -3,55 +3,63 @@
     <html lang="ja">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>株価ダッシュボード</title>
+        <title>プロ仕様・株価ダッシュボード</title>
         <style>
             body { 
-                font-family: 'Helvetica Neue', Arial, sans-serif; 
-                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
-                min-height: 100vh;
-                padding: 20px; 
-                color: #333; 
+                font-family: 'Segoe UI', Meiryo, sans-serif; 
+                background: #1a1a1a; /* ダークモード風 */
+                color: #eee;
+                padding: 40px; 
             }
             .container { 
-                max-width: 800px; 
+                max-width: 900px; 
                 margin: 0 auto; 
-                background: white; 
+                background: #2d2d2d; 
                 padding: 30px; 
-                border-radius: 15px; 
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+                border-radius: 20px; 
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
             }
-            h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; text-align: center; }
-            h3 { color: #2980b9; margin-top: 30px; border-left: 5px solid #2980b9; padding-left: 10px; }
+            h1 { text-align: center; color: #fff; margin-bottom: 30px; }
+            
+            /* あなたが作ったスタイルをここに適用！ */
             .stock-item { 
-                padding: 15px; 
-                border-bottom: 2px solid #3498db; 
-                font-size: 2.0em; 
-                font-weight: 900; 
-                color: #2c3e50;
-                display: flex; 
-                justify-content: space-between; 
+                background: #3d3d3d;
+                margin-bottom: 15px;
+                padding: 20px;
+                border-radius: 0 10px 10px 0;
+                font-size: 1.5em;
+                font-weight: bold;
+                display: flex;
+                justify-content: space-between;
+                transition: transform 0.2s;
             }
-            .stock-item:hover {
-                background-color: #f1f9ff;
-                transform: scale(1.02);
-                transition: 0.3s;
-                cursor: pointer;
+            .stock-item:hover { transform: translateX(10px); }
+
+            .status-up { 
+                color: #ff4d4d; 
+                border-left: 10px solid #ff4d4d; 
+                padding-left: 15px; 
             }
-            .news-item { padding: 8px 0; border-bottom: 1px dashed #ccc; color: #444; }
-            .time { text-align: right; color: #7f8c8d; font-size: 0.9em; margin-bottom: 20px; }
+            .status-down { 
+                color: #00fa9a; 
+                border-left: 10px solid #00fa9a; 
+                padding-left: 15px; 
+            }
+
+            .news-item { padding: 10px; border-bottom: 1px solid #444; color: #ccc; }
+            .time { text-align: right; color: #888; }
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>📊 投資ダッシュボード</h1>
-            <p class="time">最終更新日時: 2026-03-18 16:55:52</p>
+            <h1>📈 MARKET DASHBOARD</h1>
+            <p class="time">LAST UPDATE: 2026-03-19 12:30:15</p>
             
-            <h3>📈 現在の株価状況</h3>
-            <div class="stock-item">エヌビディア: 181.93円 (-0.70%)</div><div class="stock-item">トヨタ: 3404.00円 (+0.74%)</div><div class="stock-item">ソフトバンクG: 3750.00円 (+5.81%)</div>
+            <h3>💹 監視銘柄</h3>
+            <div class="stock-item status-down">エヌビディア: 180.40円 (-0.84%)</div><div class="stock-item status-down">トヨタ: 3352.00円 (-1.53%)</div><div class="stock-item status-down">ソフトバンクG: 3593.00円 (-4.19%)</div>
             
-            <h3>📰 最新ニュース</h3>
-            <div class="news-item">・JavaScriptの設定を変更する方法はこちら</div><div class="news-item">・首相 トランプ氏と桜の記念植樹へ3/18(水) 16:20</div><div class="news-item">・WBC決勝 オリ守護神が勝利投手3/18(水) 16:13</div><div class="news-item">・日経平均が反発 終値5万5239円3/18(水) 15:51</div>
+            <h3>📰 ヘッドライン</h3>
+            <div class="news-item">・JavaScriptの設定を変更する方法はこちら</div><div class="news-item">・日銀 政策金利据え置き決定3/19(木) 12:01</div><div class="news-item">・学童で児童土下座させる 虐待判断3/19(木) 11:46</div><div class="news-item">・日米首脳 共同声明発表は見送りか3/19(木) 11:29</div>
         </div>
     </body>
     </html>

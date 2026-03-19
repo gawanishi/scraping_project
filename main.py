@@ -16,60 +16,75 @@ def save_log(message):
 def update_web_page(summary, news_list):
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
-    # CSSの波括弧だけを {{ }} にしています
+    # --- 1. 株価ごとに「上昇(up)」か「下落(down)」かのHTMLを作る ---
+    items_html = ""
+    for item in summary:
+        # 文字列の中に "-" (マイナス) があれば下落クラス、なければ上昇クラス
+        status_class = "status-down" if "-" in item else "status-up"
+        items_html += f'<div class="stock-item {status_class}">{item}</div>'
+
+    # --- 2. HTML全体の組み立て ---
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ja">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>株価ダッシュボード</title>
+        <title>プロ仕様・株価ダッシュボード</title>
         <style>
             body {{ 
-                font-family: 'Helvetica Neue', Arial, sans-serif; 
-                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
-                min-height: 100vh;
-                padding: 20px; 
-                color: #333; 
+                font-family: 'Segoe UI', Meiryo, sans-serif; 
+                background: #1a1a1a; /* ダークモード風 */
+                color: #eee;
+                padding: 40px; 
             }}
             .container {{ 
-                max-width: 800px; 
+                max-width: 900px; 
                 margin: 0 auto; 
-                background: white; 
+                background: #2d2d2d; 
                 padding: 30px; 
-                border-radius: 15px; 
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+                border-radius: 20px; 
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
             }}
-            h1 {{ color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; text-align: center; }}
-            h3 {{ color: #2980b9; margin-top: 30px; border-left: 5px solid #2980b9; padding-left: 10px; }}
+            h1 {{ text-align: center; color: #fff; margin-bottom: 30px; }}
+            
+            /* あなたが作ったスタイルをここに適用！ */
             .stock-item {{ 
-                padding: 15px; 
-                border-bottom: 2px solid #3498db; 
-                font-size: 2.0em; 
-                font-weight: 900; 
-                color: #2c3e50;
-                display: flex; 
-                justify-content: space-between; 
+                background: #3d3d3d;
+                margin-bottom: 15px;
+                padding: 20px;
+                border-radius: 0 10px 10px 0;
+                font-size: 1.5em;
+                font-weight: bold;
+                display: flex;
+                justify-content: space-between;
+                transition: transform 0.2s;
             }}
-            .stock-item:hover {{
-                background-color: #f1f9ff;
-                transform: scale(1.02);
-                transition: 0.3s;
-                cursor: pointer;
+            .stock-item:hover {{ transform: translateX(10px); }}
+
+            .status-up {{ 
+                color: #ff4d4d; 
+                border-left: 10px solid #ff4d4d; 
+                padding-left: 15px; 
             }}
-            .news-item {{ padding: 8px 0; border-bottom: 1px dashed #ccc; color: #444; }}
-            .time {{ text-align: right; color: #7f8c8d; font-size: 0.9em; margin-bottom: 20px; }}
+            .status-down {{ 
+                color: #00fa9a; 
+                border-left: 10px solid #00fa9a; 
+                padding-left: 15px; 
+            }}
+
+            .news-item {{ padding: 10px; border-bottom: 1px solid #444; color: #ccc; }}
+            .time {{ text-align: right; color: #888; }}
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>📊 投資ダッシュボード</h1>
-            <p class="time">最終更新日時: {now}</p>
+            <h1>📈 MARKET DASHBOARD</h1>
+            <p class="time">LAST UPDATE: {now}</p>
             
-            <h3>📈 現在の株価状況</h3>
-            {"".join([f'<div class="stock-item">{item}</div>' for item in summary])}
+            <h3>💹 監視銘柄</h3>
+            {items_html}
             
-            <h3>📰 最新ニュース</h3>
+            <h3>📰 ヘッドライン</h3>
             {"".join([f'<div class="news-item">・{n}</div>' for n in news_list])}
         </div>
     </body>
@@ -78,8 +93,7 @@ def update_web_page(summary, news_list):
     
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
-    print("🌐 Webページを更新しました (index.html)")
-
+    print("🌐 デザインを更新しました！ (index.html)")
 # --- 3. ニュース取得 ---
 def get_all_news():
     headers = {"User-Agent": "Mozilla/5.0"}
