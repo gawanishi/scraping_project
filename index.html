@@ -5,61 +5,33 @@
         <meta charset="UTF-8">
         <title>プロ仕様・株価ダッシュボード</title>
         <style>
-            body { 
-                font-family: 'Segoe UI', Meiryo, sans-serif; 
-                background: #1a1a1a; /* ダークモード風 */
-                color: #eee;
-                padding: 40px; 
-            }
-            .container { 
-                max-width: 900px; 
-                margin: 0 auto; 
-                background: #2d2d2d; 
-                padding: 30px; 
-                border-radius: 20px; 
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            }
+            body { font-family: 'Segoe UI', Meiryo, sans-serif; background: #1a1a1a; color: #eee; padding: 40px; }
+            .container { max-width: 900px; margin: 0 auto; background: #2d2d2d; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
             h1 { text-align: center; color: #fff; margin-bottom: 30px; }
             
-            /* あなたが作ったスタイルをここに適用！ */
             .stock-item { 
-                background: #3d3d3d;
-                margin-bottom: 15px;
-                padding: 20px;
-                border-radius: 0 10px 10px 0;
-                font-size: 1.5em;
-                font-weight: bold;
-                display: flex;
-                justify-content: space-between;
-                transition: transform 0.2s;
+                background: #3d3d3d; margin-bottom: 15px; padding: 20px; border-radius: 0 10px 10px 0;
+                font-size: 1.5em; font-weight: bold; display: flex; justify-content: space-between; transition: 0.2s;
             }
             .stock-item:hover { transform: translateX(10px); }
+            .status-up { color: #ff4d4d; border-left: 10px solid #ff4d4d; padding-left: 15px; }
+            .status-down { color: #00fa9a; border-left: 10px solid #00fa9a; padding-left: 15px; }
 
-            .status-up { 
-                color: #ff4d4d; 
-                border-left: 10px solid #ff4d4d; 
-                padding-left: 15px; 
-            }
-            .status-down { 
-                color: #00fa9a; 
-                border-left: 10px solid #00fa9a; 
-                padding-left: 15px; 
-            }
-
-            .news-item { padding: 10px; border-bottom: 1px solid #444; color: #ccc; }
-            .time { text-align: right; color: #888; }
+            .news-item { padding: 12px; border-bottom: 1px solid #444; }
+            .news-item a { color: #3498db; text-decoration: none; transition: 0.3s; font-size: 1.1em; }
+            .news-item a:hover { color: #5dade2; text-decoration: underline; }
+            
+            .time { text-align: right; color: #888; margin-bottom: 10px; }
         </style>
     </head>
     <body>
         <div class="container">
             <h1>📈 MARKET DASHBOARD</h1>
-            <p class="time">LAST UPDATE: 2026-03-19 12:30:15</p>
-            
+            <p class="time">LAST UPDATE: 2026-03-19 13:57:34</p>
             <h3>💹 監視銘柄</h3>
-            <div class="stock-item status-down">エヌビディア: 180.40円 (-0.84%)</div><div class="stock-item status-down">トヨタ: 3352.00円 (-1.53%)</div><div class="stock-item status-down">ソフトバンクG: 3593.00円 (-4.19%)</div>
-            
-            <h3>📰 ヘッドライン</h3>
-            <div class="news-item">・JavaScriptの設定を変更する方法はこちら</div><div class="news-item">・日銀 政策金利据え置き決定3/19(木) 12:01</div><div class="news-item">・学童で児童土下座させる 虐待判断3/19(木) 11:46</div><div class="news-item">・日米首脳 共同声明発表は見送りか3/19(木) 11:29</div>
+            <div class="stock-item status-down">エヌビディア: 180.40円 (-0.84%)</div><div class="stock-item status-down">トヨタ: 3336.00円 (-2.00%)</div><div class="stock-item status-down">ソフトバンクG: 3560.00円 (-5.07%)</div>
+            <h3>📰 ヘッドライン (クリックで記事へ)</h3>
+            <div class="news-item"><a href="https://support.yahoo-net.jp/noscript" target="_blank">・JavaScriptの設定を変更する方法はこちら</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573598" target="_blank">・昨夏V 沖縄尚学まさかの初戦敗退3/19(木) 13:41</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573597" target="_blank">・日産「6500億円赤字」現状を解説3/19(木) 13:33</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573596" target="_blank">・松本純氏が死去 元国家公安委員長3/19(木) 13:28</a></div>
         </div>
     </body>
     </html>
