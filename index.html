@@ -27,12 +27,23 @@
     <body>
         <div class="container">
             <h1>📈 MARKET DASHBOARD</h1>
-            <p class="time">LAST UPDATE: 2026-03-19 13:57:34</p>
+            <p class="time">LAST UPDATE: 2026-03-19 14:06:15</p>
             <h3>💹 監視銘柄</h3>
-            <div class="stock-item status-down">エヌビディア: 180.40円 (-0.84%)</div><div class="stock-item status-down">トヨタ: 3336.00円 (-2.00%)</div><div class="stock-item status-down">ソフトバンクG: 3560.00円 (-5.07%)</div>
+            <div class="stock-item status-down">エヌビディア: 180.40円 (-0.84%)</div><div class="stock-item status-down">トヨタ: 3331.00円 (-2.14%)</div><div class="stock-item status-down">ソフトバンクG: 3555.00円 (-5.20%)</div>
             <h3>📰 ヘッドライン (クリックで記事へ)</h3>
             <div class="news-item"><a href="https://support.yahoo-net.jp/noscript" target="_blank">・JavaScriptの設定を変更する方法はこちら</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573598" target="_blank">・昨夏V 沖縄尚学まさかの初戦敗退3/19(木) 13:41</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573597" target="_blank">・日産「6500億円赤字」現状を解説3/19(木) 13:33</a></div><div class="news-item"><a href="https://news.yahoo.co.jp/pickup/6573596" target="_blank">・松本純氏が死去 元国家公安委員長3/19(木) 13:28</a></div>
         </div>
+        <p class="time">現在時刻: <span id="realtime-clock">読み込み中...</span></p>
+        <script>
+        function updateClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('ja-JP');
+        document.getElementById('realtime-clock').innerText = timeString;
+         }
+        // 1秒(1000ミリ秒)ごとにupdateClockを実行する
+         setInterval(updateClock, 1000);
+         updateClock(); // 最初の一回を実行
+     </script>
     </body>
     </html>
     

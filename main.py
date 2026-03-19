@@ -62,6 +62,17 @@ def update_web_page(summary, news_list):
             <h3>📰 ヘッドライン (クリックで記事へ)</h3>
             {news_html}
         </div>
+        <p class="time">現在時刻: <span id="realtime-clock">読み込み中...</span></p>
+        <script>
+        function updateClock() {{
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('ja-JP');
+        document.getElementById('realtime-clock').innerText = timeString;
+         }}
+        // 1秒(1000ミリ秒)ごとにupdateClockを実行する
+         setInterval(updateClock, 1000);
+         updateClock(); // 最初の一回を実行
+     </script>
     </body>
     </html>
     """
